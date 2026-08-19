@@ -1,1 +1,1 @@
-# 6nimmt-cpp
+# C5 Card Game
