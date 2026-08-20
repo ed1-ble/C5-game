@@ -201,7 +201,7 @@ void makeRound(Board& board, TUI& game_window, int roundNum,
             printRows(board, game_window,roundNum);
             printHand(CURRENT_HANDS[idx], plrName, board, game_window);
 
-            plrInput = rangedIntegerInput(1,10);
+            plrInput = rangedIntegerInput(1,CURRENT_HANDS[idx].size());
         }
         CHOSEN_CARDS.push_back(CURRENT_HANDS[idx][plrInput-1]); // Add Corresponding card
         deleteCardFromVec(CURRENT_HANDS[idx], CURRENT_HANDS[idx][plrInput-1]);
