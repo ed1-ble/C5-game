@@ -1,105 +1,75 @@
-Here's a concise worklog entry focusing on the main bugs you remember:
+19/8 - 20/8 Worklog
 
----
+- Added game.cpp, game.hpp which contained some functions regarding main game loop, such as board initializing.
+    - Board Class : contains 4 main rows along with some row-manipulating functions.
+    - GetRowPlacement() : Derive the correct card placement spot in the 4 rows.
+    - sortCards() : a general sorting function to sort a vector of cards.
+    - sortCards_Names_Collect() : a specific sorting function that sorts cards, player name list and player collect list all at once.
 
-# 6 Nimmt! Game Development - Bug Worklog
+- Changes in card.hpp, card.cpp were made, some new functions were added.
+    - drawCard() : draws a card from deck, used for initializing the hands and board etc.
+    - deleteCard() : removes a card from the deck.
+    - deleteCardFromVec() : general function that removes a card from any vector/array of cards, convenient for things like removing cards from a row.
 
-## 🐛 Major Bugs Encountered
+- Changes in main.cpp were made, added new functions and modified old ones.
+-> New functions:
+    - makeRound() : Manages round state, connects many other functions and keeps track of all hands, collect piles.
+    - showTurnOrder() : Uses TUI functions to display a screen showing turn order.
+    - showRoundSummary() : Uses TUI functions to display a summary screen showing performance of the players that round (catfaces total, cards in collect pile).
+    - pickRow() : Displays a prompt and asks player to input a row of cards to collect when needed.
+    - printHand() : Uses TUI functions to display the Hand of selected player while in a round.
+    - initHands() : Initialize a player's hand by drawing cards using drawCard().
+    - printRows() : Use TUI functions to display all the 4 rows of cards in the round.
+    - rangedIntegerInput() : Convenient function extended upon integerInput().
+-> Modifications:
+    - Initialize CURRENT_HANDS which stores all hands of players in a vector. It is a vector storing vectors of cards (hand).
+    - Initialize CURRENT_COLLECTS which stores all collect piles of players in a vector. (cards collected as penalty)
+    - Initialize board by making a board object of class Board and using its constructor function Board::Board() to 
+      make a deck of cards and initialize the 4 rows (draw 4 unique cards, push into rows).
 
-### 1. Iterating While Modifying - CollectRow() Crash
-**Issue:** `CollectRow()` iterated over a vector while calling `deleteCardFromVec()`, causing iterator invalidation and crashes.
 
-**Fix:** Separated copy and clear operations:
-```cpp
-void Board::CollectRow(std::vector<Card>& row, std::vector<Card>& plrCollects){
-    for (const auto& card : row) {
-        plrCollects.push_back(card);
-    }
-    row.clear();  // ✅ Safe, no iterators active
-}
-```
 
-### 2. GetRowPlacement() - Only Checked One Row
-**Issue:** Function only checked `row1[0]` to determine if card was smaller than all rows, but rows change independently during gameplay.
+Some bugs were encountered and have been fixed, following is the list of bugs in random order:
 
-**Fix:** Check ALL rows:
-```cpp
-for (int i = 0; i < 4; i++) {
-    // Check each row
-    if (card.value < rows[i]->back().value) {
-        // This row has smaller last card
-    }
-}
-```
+Bug 1: CollectRow() - Vector Modification During Iteration
 
-### 3. Makefile PIE Linking Errors
-**Issue:** Object files compiled without `-fPIE` but linker tried to create PIE executable:
-```
-relocation R_X86_64_32 against `.rodata' can not be used when making a PIE object
-```
+- Iterated through vector while deleteCardFromVec() erased elements
+- Range-based for loop iterator invalidated -> undefined behavior
+- Fix: Copied cards to collection first, then called row.clear()
 
-**Fix:** Added explicit flags to Makefile:
-```makefile
-C = g++
-CFLAGS = -std=c++20 -Wall -Wextra -I. -fPIE
-LDFLAGS = -pie
-```
-Then cleaned and rebuilt: `make clean && make`
+Bug 2: GetRowPlacement() - Only Checked One Row
 
-### 4. sortCards() - No Guard Rails
-**Issue:** `sortCards()` had no guard for empty/single-element vectors, causing underflow in loop conditions.
+- Only checked row1[0] to determine if card was smaller than all rows
+- Rows evolve independently so this was incorrect
+- Fix: Loop checks all rows (row1-4) for smallest positive difference
 
-**Fix:**
-```cpp
-void sortCards(std::vector<Card>& arr) {
-    size_t n = arr.size();
-    if (n <= 1) return;  // ✅ Guard clause
-    
-    for (size_t i = 0; i < n - 1; i++) {
-        // Sorting logic
-    }
-}
-```
+Bug 3: Makefile PIE Linking Errors (PIE is some security feature, but it cancelled compiling of my program unreasonably many times)
 
-### 5. Header File Issues - Missing Declarations
-**Issue:** Functions declared in headers but missing implementations, or vice versa.
+- Object files compiled without -fPIE but linker expected PIE
+- Relocation errors because object files had absolute addresses
+- Fix: Added -fPIE to CXXFLAGS and -pie to LDFLAGS, rebuilt all
 
-**Fix:** Always ensure:
-- Header (.hpp) has declarations
-- Source (.cpp) has implementations
-- Signatures match exactly
-- Use `#pragma once` to prevent multiple includes
+Bug 4: Careless Indexing Mismatch - 1-Based vs 0-Based
 
----
+- Computer: 0-based indexing (rand() % size)
+- Human: 1-based indexing (rangedIntegerInput)
+- Both used plrInput-1 -> computer accessed -1 when rand() returned 0
+- Fix: Converted human input to 0-based immediately: rangedIntegerInput(1, size) - 1
 
-## 📊 Quick Summary
+Bug 5: Header File Issues - Missing Declarations
 
-| Bug | Type | Severity | Status |
-|-----|------|----------|--------|
-| Iterating while modifying | Iterator invalidation | Critical | ✅ |
-| Only checked row1 | Logic error | Critical | ✅ |
-| PIE linking | Build error | High | ✅ |
-| No guard rails in sort | Edge case crash | High | ✅ |
-| Missing declarations | Build error | Medium | ✅ |
+- Functions declared in headers but missing implementations
+- Signatures mismatched between declaration and definition
+- Fix: Ensured all declarations had matching definitions
 
----
+Bug 6: deleteCardFromVec() - Iterator Invalidation
 
-## 🎯 Lessons Learned
+- Range-based for loop with vector.erase() invalidated internal iterator
+- Next iteration accessed invalid iterator -> crash
+- Crash depended on card position (intermittent)
+- Fix: Index-based loop with return after erase
 
-1. **Never modify containers while iterating** - Separate operations
-2. **Check ALL data**, not just assumptions - Game state changes
-3. **Explicit compiler flags** avoid mysterious linker errors
-4. **Guard clauses** prevent edge case crashes
-5. **Header consistency** saves hours of debugging
+Bug 7: showRoundSummary() - Uninitialized Variable
 
----
-
-That's the concise version! Short and sweet. 😊
-
-- Forgot to initialize a INT value, which leads to += adding to garbage value.
-Example: 
-int catfaceSum;
-catfaceSum += cf; // <- adds to garbage value since catfaceSum has no init value
-
-should be:
-int catfaceSum = 0;
+- catfaceSum declared but not initialized before +=
+- Fix: int catfaceSum = 0;
