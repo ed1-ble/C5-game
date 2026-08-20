@@ -1,5 +1,7 @@
 # Obj files
 ./include/*.o
 ./src/.o
-game
 *.o
+
+# executables
+game

@@ -2,6 +2,7 @@
 #include <string>
 #include <cstdlib>
 #include <ctime>
+#include <vector>
 #include "../include/tui.hpp"
 #include "../include/card.hpp"
 #include "../include/game.hpp"
@@ -158,20 +159,36 @@ void printHand(std::vector<Card>& Hand, std::string plrName,
     game_window.appendText(17,9, border);
     game_window.appendText(14,10,hand_str1);
     game_window.appendText(15,10,hand_str2);
-    game_window.appendText(19,10,"[1-10] Choose a card to play (1-10)");
+    game_window.appendText(19,10,"[1-10] Choose a card to play");
     game_window.draw();
 }
 
+int pickRow(TUI& game_window, std::string plrName){
+    std::string spaces;
+    spaces.append(WINDOW_WIDTH-2,' '); // Char: ' ' * WINDOW_WIDTH
+    game_window.appendText(19, 1, spaces); // Flush out the 19th row
+    game_window.draw();
+    game_window.appendText(19, 10, "[1-4] Pick a row to collect, "+plrName);
+    game_window.draw();
+
+    int plrInput = rangedIntegerInput(1, 4);
+    return plrInput;
+}
+
 #define MAX_TURNS 10
+#define MAX_CARDS_PER_ROW 5
 #define MAX_CATFACES 66
 
 void makeRound(Board& board, TUI& game_window, int roundNum, 
-    const std::vector<std::string> plr_names,std::vector<std::vector<Card>>& CURRENT_HANDS){ // Takes care of everything in a round
+    const std::vector<std::string> plr_names,
+    std::vector<std::vector<Card>>& CURRENT_HANDS,
+    std::vector<std::vector<Card>>& CURRENT_COLLECTS){ // Takes care of everything in a round
     // OK 1: Print the board 
     // OK 2: For each player, print their hand, ask for input (check if Computer, rng if need)
     // OK 3: Determine turn order (sort the cards AND the players arrays in same func.)
-    // 4: Place the cards, remove from hand, ask for input if needed, clear row if need (check if is Computer, then rng it if so)
+    // OK 4: Place the cards (find correct placement), remove from hand, ask for input if needed, clear row if need (check if is Computer, then rng it if so)
     // 5: Calculate catfaces
+
     
     int idx = 0;
     std::vector<std::string> plr_names_order = plr_names;
@@ -187,11 +204,52 @@ void makeRound(Board& board, TUI& game_window, int roundNum,
             plrInput = rangedIntegerInput(1,10);
         }
         CHOSEN_CARDS.push_back(CURRENT_HANDS[idx][plrInput-1]); // Add Corresponding card
+        deleteCardFromVec(CURRENT_HANDS[idx], CURRENT_HANDS[idx][plrInput-1]);
+        // Remove card from hand, now card is in CHOSEN_CARDS, which is a temporary Vector
         idx++;
     }
-    sortCardsAndName(CHOSEN_CARDS, plr_names_order);
-    // Sort the plr_names_order & Chosen cards order in ASCENDING
-    
+    sortCards_Names_Collects(CHOSEN_CARDS, plr_names_order, CURRENT_COLLECTS);
+    // Sort the plr_names_order & Chosen cards & Collects order in ASCENDING
+
+    std::vector<std::vector<Card>*> rows = {&board.row1, &board.row2, &board.row3, &board.row4};
+    int idx2 = 0; // Arbitrary index for counting
+    for (auto& c : CHOSEN_CARDS){
+        int corr_row = board.GetRowPlacement(c);
+
+        if (corr_row == -1){ // Code -1: Pick a row, Collect the row , place the card
+            int plrInputRow;
+            if (plr_names_order[idx2] == "Computer") {
+                plrInputRow = rand()%4 + 1; // RNG pick if computer player
+            } else {
+                printRows(board, game_window, roundNum);
+                plrInputRow = pickRow(game_window, plr_names_order[idx2]);
+            }
+
+            board.CollectRow(*rows[plrInputRow-1], CURRENT_COLLECTS[idx2]);
+            
+            board.PlaceCard(c,*rows[plrInputRow-1]);
+
+        } else {
+            // Check row to see if full
+            // the following if statement: Gets pointer to corr_row, access it, gets its size, compare with MAX_CARDS_PER_ROW
+            if (rows[corr_row-1]->size() == MAX_CARDS_PER_ROW) { // Row is full: collect row, place the card
+                board.CollectRow(*rows[corr_row-1], CURRENT_COLLECTS[idx2]);
+                board.PlaceCard(c,*rows[corr_row-1]);
+
+            } else { // OK, place the card
+                board.PlaceCard(c,*rows[corr_row-1]);
+            }
+        }
+        idx2++;
+
+        // Redraw the Rows everytime after placement
+        printRows(board, game_window, roundNum);
+    }
+
+    // ROUND IS COMPLETED HERE: Calculate Catfaces
+    // Show Collect piles of each player on one screen
+    // Show sum of catfaces
+    // Basically a summary screen for each round end
 }
 
 int main(){
@@ -218,7 +276,9 @@ int main(){
         std::vector<std::vector<Card>> CURRENT_HANDS(plrNum); // Stores all card hands of human and computer players combined
         initHands(CURRENT_HANDS, card_deck);
 
-        makeRound(board, game_window, 1, plr_names, CURRENT_HANDS); // Make ONE round for now, loop this LATER
+        std::vector<std::vector<Card>> CURRENT_COLLECTS(plrNum);
+
+        makeRound(board, game_window, 1, plr_names, CURRENT_HANDS, CURRENT_COLLECTS); // Make ONE round for now, loop this LATER
 
     }     
     return 0;

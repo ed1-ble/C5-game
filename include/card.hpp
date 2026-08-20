@@ -1,4 +1,3 @@
-#include <iostream>
 #include <vector>
 #pragma once
 
@@ -16,3 +15,4 @@ class Deck
 
 Card drawCard(Deck& deck);
 void deleteCard(Deck& deck, int cardIndex);
+void deleteCardFromVec(std::vector<Card>& card_vector, Card& card);
