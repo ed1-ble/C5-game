@@ -25,12 +25,10 @@ void deleteCard(Deck& deck, int cardIndex){
 }
 
 void deleteCardFromVec(std::vector<Card>& card_vector, Card& card){
-    int idx = 0;
-    for (auto& c : card_vector){
-        if (c.value == card.value){
-            card_vector.erase(card_vector.begin() + idx); 
+    for (int i =0;i<card_vector.size();i++){
+        if (card_vector[i].value == card.value){
+            card_vector.erase(card_vector.begin() + i); 
             return;
         }
-        idx++;
     }
 }

@@ -245,7 +245,7 @@ std::vector<std::string> makeRound(Board& board, TUI& game_window, int roundNum,
     for (auto& plrName : plr_names){ // all players
         int plrInput;
         if(plrName == "Computer"){
-            plrInput = rand() % CURRENT_HANDS[idx].size();
+            plrInput = rand() % CURRENT_HANDS[idx].size() + 1;
 
             printRows(board, game_window,roundNum);
             printHand(CURRENT_HANDS[idx], plrName, board, game_window);
@@ -258,8 +258,9 @@ std::vector<std::string> makeRound(Board& board, TUI& game_window, int roundNum,
 
             plrInput = rangedIntegerInput(1,CURRENT_HANDS[idx].size());
         }
-        CHOSEN_CARDS.push_back(CURRENT_HANDS[idx][plrInput-1]); // Add Corresponding card
-        deleteCardFromVec(CURRENT_HANDS[idx], CURRENT_HANDS[idx][plrInput-1]);
+        Card card_copy = CURRENT_HANDS[idx][plrInput-1];
+        CHOSEN_CARDS.push_back(card_copy); // Add Corresponding card
+        deleteCardFromVec(CURRENT_HANDS[idx], card_copy);
         // Remove card from hand, now card is in CHOSEN_CARDS, which is a temporary Vector
         idx++;
     }

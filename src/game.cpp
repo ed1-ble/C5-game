@@ -6,7 +6,7 @@
 void sortCards(std::vector<Card>& arr) { 
     // Bubble sort in ascending order
     size_t n = arr.size();
-    if (n == 0) {std::cout << "EMPTY ARRAY FOR SORTING";}
+    if (n <= 0) {std::cout << "EMPTY ARRAY FOR SORTING OR UNDERFLOW";return;}
     else{
         for (size_t i = 0; i < n - 1; i++) {
             for (size_t j = 0; j < n - 1 - i; j++) {
@@ -25,7 +25,7 @@ void sortCards_Names_Collects(std::vector<Card>& arr,
 
     // Same ascending bubble sort but sorts Adjacent arrays too
     size_t n = arr.size();
-    if (n == 0) {std::cout << "EMPTY ARRAY FOR SORTING";} else {
+    if (n <= 1) {std::cout << "EMPTY ARRAY FOR SORTING OR UNDERFLOW";return;} else {
         for (size_t i = 0; i < n - 1; i++) {
             for (size_t j = 0; j < n - 1 - i; j++) {
                 if (arr[j].value > arr[j + 1].value) {
@@ -55,12 +55,18 @@ Board::Board(Deck& deck){
 int Board::GetRowPlacement(Card card){ 
   
     // Calculate and return the row to be placed in for the card
-    int corr_row; // means CORRECT ROW
+    int corr_row = -1; // means CORRECT ROW
     // For this else case, it means that there MUST be at least one row with positive difference
     int minPosDiff = 1000; // Minimum positive difference, larger than, and smallest possible no.
     // Since row1-4 are vectors of cards, we can easily find the largest no. in each r
     // which is row[row.size()-1]
     int idx = 1;
+
+    if (row1.size() <= 0 or row2.size() <= 0 or row3.size() <= 0 or row4.size() <= 0){
+        std::cout << "ROW SIZE IS 0" << std::endl;
+        return -2;
+    } // Guard rails incase of bug
+
     while (idx <= 4){ // loop thru all rows
         int diff;
         switch(idx){
