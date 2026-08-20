@@ -1,0 +1,105 @@
+Here's a concise worklog entry focusing on the main bugs you remember:
+
+---
+
+# 6 Nimmt! Game Development - Bug Worklog
+
+## 🐛 Major Bugs Encountered
+
+### 1. Iterating While Modifying - CollectRow() Crash
+**Issue:** `CollectRow()` iterated over a vector while calling `deleteCardFromVec()`, causing iterator invalidation and crashes.
+
+**Fix:** Separated copy and clear operations:
+```cpp
+void Board::CollectRow(std::vector<Card>& row, std::vector<Card>& plrCollects){
+    for (const auto& card : row) {
+        plrCollects.push_back(card);
+    }
+    row.clear();  // ✅ Safe, no iterators active
+}
+```
+
+### 2. GetRowPlacement() - Only Checked One Row
+**Issue:** Function only checked `row1[0]` to determine if card was smaller than all rows, but rows change independently during gameplay.
+
+**Fix:** Check ALL rows:
+```cpp
+for (int i = 0; i < 4; i++) {
+    // Check each row
+    if (card.value < rows[i]->back().value) {
+        // This row has smaller last card
+    }
+}
+```
+
+### 3. Makefile PIE Linking Errors
+**Issue:** Object files compiled without `-fPIE` but linker tried to create PIE executable:
+```
+relocation R_X86_64_32 against `.rodata' can not be used when making a PIE object
+```
+
+**Fix:** Added explicit flags to Makefile:
+```makefile
+C = g++
+CFLAGS = -std=c++20 -Wall -Wextra -I. -fPIE
+LDFLAGS = -pie
+```
+Then cleaned and rebuilt: `make clean && make`
+
+### 4. sortCards() - No Guard Rails
+**Issue:** `sortCards()` had no guard for empty/single-element vectors, causing underflow in loop conditions.
+
+**Fix:**
+```cpp
+void sortCards(std::vector<Card>& arr) {
+    size_t n = arr.size();
+    if (n <= 1) return;  // ✅ Guard clause
+    
+    for (size_t i = 0; i < n - 1; i++) {
+        // Sorting logic
+    }
+}
+```
+
+### 5. Header File Issues - Missing Declarations
+**Issue:** Functions declared in headers but missing implementations, or vice versa.
+
+**Fix:** Always ensure:
+- Header (.hpp) has declarations
+- Source (.cpp) has implementations
+- Signatures match exactly
+- Use `#pragma once` to prevent multiple includes
+
+---
+
+## 📊 Quick Summary
+
+| Bug | Type | Severity | Status |
+|-----|------|----------|--------|
+| Iterating while modifying | Iterator invalidation | Critical | ✅ |
+| Only checked row1 | Logic error | Critical | ✅ |
+| PIE linking | Build error | High | ✅ |
+| No guard rails in sort | Edge case crash | High | ✅ |
+| Missing declarations | Build error | Medium | ✅ |
+
+---
+
+## 🎯 Lessons Learned
+
+1. **Never modify containers while iterating** - Separate operations
+2. **Check ALL data**, not just assumptions - Game state changes
+3. **Explicit compiler flags** avoid mysterious linker errors
+4. **Guard clauses** prevent edge case crashes
+5. **Header consistency** saves hours of debugging
+
+---
+
+That's the concise version! Short and sweet. 😊
+
+- Forgot to initialize a INT value, which leads to += adding to garbage value.
+Example: 
+int catfaceSum;
+catfaceSum += cf; // <- adds to garbage value since catfaceSum has no init value
+
+should be:
+int catfaceSum = 0;

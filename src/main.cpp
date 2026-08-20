@@ -175,11 +175,61 @@ int pickRow(TUI& game_window, std::string plrName){
     return plrInput;
 }
 
+void showRoundSummary(TUI& game_window,
+    std::vector<std::string>& plr_names_order,
+    std::vector<std::vector<Card>>& CURRENT_COLLECTS, int roundNo){
+    
+    game_window.flush();
+    game_window.appendEmptyBox();
+    game_window.appendText(1, 33, "ROUND "+std::to_string(roundNo)+" SUMMARY");
+    int idx = 0;
+    for (auto& coll_pile : CURRENT_COLLECTS){
+        int catfaceSum = 0; // Sum of catfaces
+        std::string string1 = plr_names_order[idx] + "'s pile: "; 
+        std::string string2;
+        // Stores the player's individual performance (No. of cf, sum of cf) as one string to display
+        
+        for (auto& card : coll_pile){
+            catfaceSum += card.cat_faces;
+            string2 += std::to_string(card.value) + "(" + std::to_string(card.cat_faces) + ") ";
+        }
+
+        if (catfaceSum == 0) {string2 = "(Empty)";};
+
+        std::string string3 = plr_names_order[idx] + "'s Catface total: " + std::to_string(catfaceSum);
+        std::string string4 = "|";
+        string4.append(35, '='); string4 += "|";
+
+        game_window.appendText(4 + 4*idx, 5, string1);
+        game_window.appendText(5 + 4*idx, 5, string2);
+        game_window.appendText(6 + 4*idx, 5, string3);
+        game_window.appendText(7 + 4*idx, 4, string4);
+
+        idx++;
+    }
+    game_window.draw();
+
+}
+
+void showTurnOrder(TUI& game_window, std::vector<std::string>plr_names_order){
+    game_window.flush();
+    game_window.appendEmptyBox();
+    int idx = 0;
+    for (auto& name : plr_names_order){
+        std::string st = "Turn "+ std::to_string(idx+1) + ": " + name;
+        game_window.appendText(6 + idx*2, 10, st);
+        idx++;
+    }
+    game_window.appendText(14, 10, "Turn Order. Input any number to continue...");
+    game_window.draw();
+}
+
 #define MAX_TURNS 10
 #define MAX_CARDS_PER_ROW 5
 #define MAX_CATFACES 66
 
-void makeRound(Board& board, TUI& game_window, int roundNum, 
+// CURRENT_COLLECTS and CURRENT_HAND needs to persist, so return sorted player names instead
+std::vector<std::string> makeRound(Board& board, TUI& game_window, int roundNum, 
     const std::vector<std::string> plr_names,
     std::vector<std::vector<Card>>& CURRENT_HANDS,
     std::vector<std::vector<Card>>& CURRENT_COLLECTS){ // Takes care of everything in a round
@@ -188,7 +238,6 @@ void makeRound(Board& board, TUI& game_window, int roundNum,
     // OK 3: Determine turn order (sort the cards AND the players arrays in same func.)
     // OK 4: Place the cards (find correct placement), remove from hand, ask for input if needed, clear row if need (check if is Computer, then rng it if so)
     // 5: Calculate catfaces
-
     
     int idx = 0;
     std::vector<std::string> plr_names_order = plr_names;
@@ -196,7 +245,13 @@ void makeRound(Board& board, TUI& game_window, int roundNum,
     for (auto& plrName : plr_names){ // all players
         int plrInput;
         if(plrName == "Computer"){
-            plrInput = rand() % 10;
+            plrInput = rand() % CURRENT_HANDS[idx].size();
+
+            printRows(board, game_window,roundNum);
+            printHand(CURRENT_HANDS[idx], plrName, board, game_window);
+            game_window.appendText(19, 10, "Computer's Hand. Input any number to continue.");
+            game_window.draw();
+            int dummy_input = integerInput();
         } else {
             printRows(board, game_window,roundNum);
             printHand(CURRENT_HANDS[idx], plrName, board, game_window);
@@ -210,6 +265,9 @@ void makeRound(Board& board, TUI& game_window, int roundNum,
     }
     sortCards_Names_Collects(CHOSEN_CARDS, plr_names_order, CURRENT_COLLECTS);
     // Sort the plr_names_order & Chosen cards & Collects order in ASCENDING
+
+    showTurnOrder(game_window, plr_names_order);
+    int dummy_input = integerInput();
 
     std::vector<std::vector<Card>*> rows = {&board.row1, &board.row2, &board.row3, &board.row4};
     int idx2 = 0; // Arbitrary index for counting
@@ -226,7 +284,6 @@ void makeRound(Board& board, TUI& game_window, int roundNum,
             }
 
             board.CollectRow(*rows[plrInputRow-1], CURRENT_COLLECTS[idx2]);
-            
             board.PlaceCard(c,*rows[plrInputRow-1]);
 
         } else {
@@ -240,16 +297,23 @@ void makeRound(Board& board, TUI& game_window, int roundNum,
                 board.PlaceCard(c,*rows[corr_row-1]);
             }
         }
-        idx2++;
 
         // Redraw the Rows everytime after placement
         printRows(board, game_window, roundNum);
+        game_window.appendText(18, 10, "Turn "+std::to_string(idx2+1)+" Results. Input any number to continue...");
+        game_window.draw();
+        dummy_input = integerInput();
+
+        idx2++;
     }
 
     // ROUND IS COMPLETED HERE: Calculate Catfaces
-    // Show Collect piles of each player on one screen
-    // Show sum of catfaces
+    // 1. Show Collect piles of each player on one screen
+    // 2. Show sum of catfaces
     // Basically a summary screen for each round end
+    showRoundSummary(game_window, plr_names_order, CURRENT_COLLECTS, roundNum);
+    return plr_names_order; //  POTENTIAL PROBLEM: CURRENT_COLLECTS is SORTED, but plr_names ISNT
+                            //  ANOTHER PROBLEM: CURRENT_HANDS is SORTED + needs to persist too!
 }
 
 int main(){
@@ -278,8 +342,8 @@ int main(){
 
         std::vector<std::vector<Card>> CURRENT_COLLECTS(plrNum);
 
-        makeRound(board, game_window, 1, plr_names, CURRENT_HANDS, CURRENT_COLLECTS); // Make ONE round for now, loop this LATER
-
+        // makeRound returns CURRENT_COLLECT to keep track of all collected cards of all players
+        plr_names = makeRound(board, game_window, 1, plr_names, CURRENT_HANDS, CURRENT_COLLECTS); // Make ONE round for now, loop this LATER
     }     
     return 0;
 }

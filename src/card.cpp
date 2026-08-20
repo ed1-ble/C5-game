@@ -28,7 +28,8 @@ void deleteCardFromVec(std::vector<Card>& card_vector, Card& card){
     int idx = 0;
     for (auto& c : card_vector){
         if (c.value == card.value){
-            card_vector.erase(card_vector.begin() + idx);
+            card_vector.erase(card_vector.begin() + idx); 
+            return;
         }
         idx++;
     }

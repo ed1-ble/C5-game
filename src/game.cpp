@@ -55,7 +55,7 @@ Board::Board(Deck& deck){
 int Board::GetRowPlacement(Card card){ 
   
     // Calculate and return the row to be placed in for the card
-    int corr_row;
+    int corr_row; // means CORRECT ROW
     // For this else case, it means that there MUST be at least one row with positive difference
     int minPosDiff = 1000; // Minimum positive difference, larger than, and smallest possible no.
     // Since row1-4 are vectors of cards, we can easily find the largest no. in each r
@@ -77,7 +77,6 @@ int Board::GetRowPlacement(Card card){
     }    
 
     if (minPosDiff == 1000) {corr_row = -1;}; // Which means minPosDiff wasnt modified, as there r only negative differences
-
     
     return corr_row;
 }
@@ -89,10 +88,10 @@ void Board::PlaceCard(Card& card, std::vector<Card>& row){
 }
 
 // Add all cards from row to collect, delete all cards in that row.
-void Board::CollectRow(std::vector<Card>& row, std::vector<Card>& plrCollects){
+void Board::CollectRow(std::vector<Card>& row, std::vector<Card>& plr_collect_pile){
     for (auto& card : row){
-        plrCollects.push_back(card);
+        plr_collect_pile.push_back(card);
     }
-    // Seperate loops, because we dont want to delete cards from row while iterating
+    // seperate clearing from loop, because we dont want to delete cards from row while iterating
     row.clear();
 }
