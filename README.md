@@ -8,6 +8,7 @@ This version is made in C++ and is TUI-based.
 ## Table of Contents
 - Demonstration
 - Installation
+- Description
 
 ## Demonstration
 Here is a demo video of the game! (It's in the Issues tab)
@@ -47,3 +48,10 @@ For Windows, use [WSL2](https://learn.microsoft.com/en-us/windows/wsl/):
 wsl --install
 # Then follow Linux instructions inside WSL
 ```
+## Description
+
+- The game has a window width and height of 22 x 80 (see /src/main.cpp line 10 & 11).
+- Headers:
+    - card.hpp: contains several functions for manipulating cards (e.g. drawCard, deleteCard etc.)
+    - game.hpp: contains functions & class related to board manipulation and game state (e.g. Board class, PlaceCard, CollectRow etc.)
+    - tui.hpp: contains functions mainly for manipulating screen display, like the alignment and lines and borders, or flushing the screen.
