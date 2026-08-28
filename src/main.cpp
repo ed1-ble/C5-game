@@ -6,6 +6,7 @@
 #include "../include/tui.hpp"
 #include "../include/card.hpp"
 #include "../include/game.hpp"
+#include <fstream>
 
 #define WINDOW_WIDTH 80
 #define WINDOW_HEIGHT 22
@@ -265,24 +266,47 @@ void gameEndAlert(TUI& game_window) { // Simple func for showing player that the
     int dummy_input = integerInput();
 }
 
+void writeSummaryToFile(std::vector<std::string> leading_plr_list){
+
+    std::string summary = "======== PERFORMANCE SUMMARY ========\nLeading Players of each round:\n";
+    int i = 1;
+    for (auto& name : leading_plr_list) {
+        summary += "ROUND " + std::to_string(i) + ": " + name + "\n";
+        i++;
+    }
+    summary += "============== WINNER ===============\n";
+    summary += "Winner: " + leading_plr_list[leading_plr_list.size()-1] + "\n";
+
+    std::ofstream file("summary.txt");
+    if (file.is_open()){
+        file << summary;
+        file.close();
+    }
+}
+
 void showGameSummary(TUI& game_window, std::vector<std::string> leading_plr_list){
     // TUI function for printing the game summary display which shows leading players and the winner
 
     game_window.flush();
     game_window.appendEmptyBox();
     game_window.appendText(1, 35, "GAME SUMMARY");
-    game_window.appendText(4, 5, "List of leading players: ");
+    game_window.appendText(4, 5, "x----- List of leading players: -----x");
     int idx = 1;
+
     for (auto& name : leading_plr_list) {
-        std::string str = "ROUND " + std::to_string(idx) + " LEAD: ";
+        std::string str = "| ROUND " + std::to_string(idx) + ": ";
         str += name;
-        game_window.appendText(6+(idx-1), 5, str);
+        game_window.appendText(5+(idx-1), 5, str);
+        game_window.appendText(5+idx-1, 42, "|");
         idx++;
     }
+    game_window.appendText(15, 5, "x------------------------------------x");
 
     // LOGIC: The winner of the game is the plr with least catfaces at the end of the game
     // , meaning the last player in leading_plr_list
-    std::string str2 = "THE WINNER IS: " + leading_plr_list[leading_plr_list.size() - 1];
+    std::string str2 = "|==== THE WINNER IS: " 
+                        + leading_plr_list[leading_plr_list.size() - 1] 
+                        + " ====|";
 
     game_window.appendText(17, 5, str2);
     game_window.appendText(19, 5, "[0-9] Input any number to continue.");
@@ -382,6 +406,7 @@ std::vector<std::string> makeRound(Board& board, TUI& game_window, int roundNum,
     // If end, display end screen with:
     // 1. Leading players list (global var)
     // 2. Winner name
+    // then write to file too
     std::vector<int> catface_totals;
     catface_totals = getCatfaceTotals(CURRENT_COLLECTS); // Sorted according to CURRENT_COLLECTS
 
@@ -406,6 +431,7 @@ std::vector<std::string> makeRound(Board& board, TUI& game_window, int roundNum,
         if (cf >= MAX_CATFACES || roundNum == MAX_TURNS) { //  Game ends
             gameEndAlert(game_window);
             showGameSummary(game_window, leading_plr_list);
+            writeSummaryToFile(leading_plr_list);
             exit(0); // Terminate the whole program
         }
     }

@@ -93,6 +93,7 @@ Below are more detailed descriptions of all changes.
                            game state and determining lead player.
     - gameEndAlert() : Simple TUI function used to display that the game has ended
     - showGameSummary() : TUI function which displays all the leading players in each turn, as well as the final winner.
+    - writeSummaryToFile() : File manipulation function which uses ofstream to output a file summary.txt with performance summary of the game.
 - There were also some minor UI changes purely for visuals made in main.cpp inputs to TUI functions.
 
 
