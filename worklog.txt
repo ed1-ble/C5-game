@@ -73,3 +73,38 @@ Bug 7: showRoundSummary() - Uninitialized Variable
 
 - catfaceSum declared but not initialized before +=
 - Fix: int catfaceSum = 0;
+
+======================================================================================
+
+28/8 Worklog
+
+Added some functions in main.cpp to do the following:
+- Count catfaces and track leading player as well as whether or not the game has ended
+- Make the game last 10 rounds, with each round having its own summary
+- Display final summary after game ends showing all leading players and the final winner
+
+Also implemented minor bug fixes.
+Below are more detailed descriptions of all changes.
+
+- New functions in main.cpp were added.
+-> New functions:
+    - getCatfaceTotals() : Returns a vector of int which stores the number of catfaces 
+                           for each player in a certain round, it is used for checking 
+                           game state and determining lead player.
+    - gameEndAlert() : Simple TUI function used to display that the game has ended
+    - showGameSummary() : TUI function which displays all the leading players in each turn, as well as the final winner.
+- There were also some minor UI changes purely for visuals made in main.cpp inputs to TUI functions.
+
+
+
+Some small bug fixes as follows:
+
+Bug 1: Integer input bug - Type check was missing
+
+- When string is input into an rangedIntegerInput(), there will be a flood of error messages by the while loop
+  which couldn't detect wrong type input
+- Added type check using std::cin as std::cin will fail if conversion of int to char fails
+
+Bug 2: UI Bug - Unwanted commas between each cards
+
+- Simply check if the card being printed is the last card, if so, discard the comma
