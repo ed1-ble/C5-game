@@ -117,7 +117,7 @@ void printRows(const Board& board, TUI& game_window, int CurrRound){
 
     game_window.flush();
     game_window.appendEmptyBox();
-    game_window.appendText(1, 35, "ROUND "+std::to_string(CurrRound));
+    game_window.appendText(1, 35, "TURN "+std::to_string(CurrRound));
     
     std::vector<std::vector<Card>> rows = {board.row1, board.row2, board.row3, board.row4};
     
@@ -168,7 +168,7 @@ void printHand(std::vector<Card>& Hand, std::string plrName,
     }
     game_window.appendText(14,10,hand_str1);
     game_window.appendText(15,10,hand_str2);
-    game_window.appendText(19,10,"[1-10] Choose a card to play");
+    game_window.appendText(19,10,"[1-10] Choose a card ID to play");
     game_window.draw();
 }
 
@@ -207,7 +207,7 @@ void showRoundSummary(TUI& game_window,
 
     game_window.flush();
     game_window.appendEmptyBox();
-    game_window.appendText(1, 33, "ROUND " + std::to_string(roundNo) + " SUMMARY");
+    game_window.appendText(1, 33, "ROUND " + std::to_string(roundNo/10) + " SUMMARY");
 
     // --- Build the table as a single string, then split into lines ---
     std::ostringstream oss;
@@ -239,7 +239,7 @@ void showRoundSummary(TUI& game_window,
         game_window.appendText(row++, 5, line);
     }
 
-    game_window.appendText(row + 1, 5, "Leading Player: " + lead_plr_name);
+    game_window.appendText(row + 1, 5, "Leading Player(s): " + lead_plr_name);
     game_window.appendText(19, 5, "[0-9] Input any number to continue...");
     game_window.draw();
     int dummy_input = integerInput();
@@ -282,24 +282,24 @@ std::string genSummaryTable(std::vector<std::string> leading_plr_list){
 
     std::ostringstream oss;
     oss << std::left; //set alignment
-    const std::string separator = "+" + std::string(8, '-') + "+" + std::string(15,'-')
+    const std::string separator = "+" + std::string(8, '-') + "+" + std::string(24,'-')
     + "+" + std::string(8, '-') + "+";
 
     // Header
     oss << separator << "\n";
     oss << std::setw(9) << "|ROUND"
-        << std::setw(16) << "|LEAD"
+        << std::setw(25) << "|LEAD(S)"
         << std::setw(9) << "|CATFACE" << "|\n";
     oss << separator << "\n";
 
     for (size_t i=0;i<leading_plr_list.size();i++){
-        oss << std::setw(9) << "|" + std::to_string(10*(i+1))
-            << std::setw(16) << "|" + leading_plr_list[i]
+        oss << std::setw(9) << "|" + std::to_string((i+1))
+            << std::setw(25) << "|" + leading_plr_list[i]
             << std::setw(9) << "|" + std::to_string(leading_catface_totals[i]) << "|\n";
     }
     oss << separator << "\n";
 
-    oss << "WINNER: " + leading_plr_list[leading_plr_list.size()-1] + "\n";
+    oss << "WINNER(S): " + leading_plr_list[leading_plr_list.size()-1] + "\n";
     
     return oss.str();
 }
@@ -316,10 +316,10 @@ void writeSummaryToFile(std::vector<std::string> leading_plr_list){
 }
 
 
-void showGameSummary(TUI& game_window, std::vector<std::string> leading_plr_list, int roundNum){
+void showGameSummary(TUI& game_window, std::vector<std::string> leading_plr_list, int turnNo){
     // TUI function for printing the game summary display which shows leading players and the winner
 
-    // roundNum here should be a multiple of ten
+    // turnNo here should be a multiple of ten
     game_window.flush();
     game_window.appendEmptyBox();
     game_window.appendText(1, 35, "GAME SUMMARY");
@@ -350,7 +350,7 @@ void showGameSummary(TUI& game_window, std::vector<std::string> leading_plr_list
 #define MAX_CATFACES 66
 
 void endOf10Turns(std::vector<std::vector<Card>> CURRENT_COLLECTS, std::vector<std::string> plr_names_order,
-TUI& game_window,std::vector<std::string>& leading_plr_list, int roundNum){
+TUI& game_window,std::vector<std::string>& leading_plr_list, int turnNo){
 
     // ROUND IS COMPLETED HERE: Calculate Catfaces
     // Check if game ends (> MAX_CATFACES) 
@@ -364,11 +364,19 @@ TUI& game_window,std::vector<std::string>& leading_plr_list, int roundNum){
     catface_totals = getCatfaceTotals(CURRENT_COLLECTS); // Sorted according to CURRENT_COLLECTS
 
     int minCF = catface_totals[0];
-    std::string lead_plr_name = plr_names_order[0];
+    std::string lead_plr_name = "(Empty)";
     for (int i = 1; i < catface_totals.size(); i++){
         if (catface_totals[i] < minCF) {
             minCF = catface_totals[i];
-            lead_plr_name = plr_names_order[i];
+        }
+    }
+    for (int i = 0; i < catface_totals.size(); i++){
+        if (catface_totals[i] == minCF) {
+            if (lead_plr_name == "(Empty)") {
+                lead_plr_name = plr_names_order[i];
+            } else {
+                lead_plr_name = lead_plr_name + ", " + plr_names_order[i];
+            }
         }
     }
     leading_catface_totals.push_back(minCF);
@@ -379,12 +387,12 @@ TUI& game_window,std::vector<std::string>& leading_plr_list, int roundNum){
     // 2. Show sum of catfaces
     // 3. Show Leading Player
     // Basically a summary screen for each round end
-    showRoundSummary(game_window, plr_names_order, CURRENT_COLLECTS, roundNum, lead_plr_name);
+    showRoundSummary(game_window, plr_names_order, CURRENT_COLLECTS, turnNo, lead_plr_name);
     
     for (auto& cf : catface_totals) {
-        if (cf >= MAX_CATFACES || roundNum == MAX_ROUNDS) { //  Game ends
+        if (cf >= MAX_CATFACES || turnNo == MAX_ROUNDS) { //  Game ends
             gameEndAlert(game_window);
-            showGameSummary(game_window, leading_plr_list, roundNum);
+            showGameSummary(game_window, leading_plr_list, turnNo);
             writeSummaryToFile(leading_plr_list);
             exit(0); // Terminate the whole program
         }
@@ -393,7 +401,7 @@ TUI& game_window,std::vector<std::string>& leading_plr_list, int roundNum){
 
 
 // CURRENT_COLLECTS and CURRENT_HAND needs to persist, so return sorted player names instead
-std::vector<std::string> makeRound(Board& board, TUI& game_window, int roundNum, 
+std::vector<std::string> makeRound(Board& board, TUI& game_window, int turnNo, 
     const std::vector<std::string> plr_names,
     std::vector<std::vector<Card>>& CURRENT_HANDS,
     std::vector<std::vector<Card>>& CURRENT_COLLECTS,
@@ -412,13 +420,13 @@ std::vector<std::string> makeRound(Board& board, TUI& game_window, int roundNum,
         if(plrName == "Computer"){
             plrInput = rand() % CURRENT_HANDS[idx].size() + 1;
 
-            printRows(board, game_window,roundNum);
+            printRows(board, game_window,turnNo);
             printHand(CURRENT_HANDS[idx], plrName, board, game_window);
             game_window.appendText(19, 10, "Computer's Hand. Input any number to continue.");
             game_window.draw();
             int dummy_input = integerInput();
         } else {
-            printRows(board, game_window,roundNum);
+            printRows(board, game_window,turnNo);
             printHand(CURRENT_HANDS[idx], plrName, board, game_window);
 
             plrInput = rangedIntegerInput(1,CURRENT_HANDS[idx].size());
@@ -445,7 +453,7 @@ std::vector<std::string> makeRound(Board& board, TUI& game_window, int roundNum,
             if (plr_names_order[idx2] == "Computer") {
                 plrInputRow = rand()%4 + 1; // RNG pick if computer player
             } else {
-                printRows(board, game_window, roundNum);
+                printRows(board, game_window, turnNo);
                 plrInputRow = pickRow(game_window, plr_names_order[idx2]);
             }
 
@@ -465,8 +473,8 @@ std::vector<std::string> makeRound(Board& board, TUI& game_window, int roundNum,
         }
 
         // Redraw the Rows everytime after placement
-        printRows(board, game_window, roundNum);
-        game_window.appendText(19, 10, "Turn "+std::to_string(idx2+1)+" Results. Input any number to continue...");
+        printRows(board, game_window, turnNo);
+        game_window.appendText(19, 10, "Results "+std::to_string(idx2+1)+". Input any number to continue...");
         game_window.draw();
         dummy_input = integerInput();
 
@@ -509,14 +517,14 @@ int main(){
         // ALL PRE-GAME SETUP SHOULD BE COMPLETED BY THIS LINE!!!
 
         // Start the 10-turned game
-        for (int roundNum = 1;roundNum<= MAX_ROUNDS; roundNum++){
+        for (int turnNo = 1;turnNo<= MAX_ROUNDS; turnNo++){
            // makeRound returns plrNames, keeping track of plr_names according to the already sorted CURRENT_HANDS, CURRENT_COLLECTS to ensure consistency
            // as the two are modified via PASS BY REFERENCE already
-            plr_names = makeRound(board, game_window, roundNum, plr_names, CURRENT_HANDS, CURRENT_COLLECTS, leading_plr_list);
-            if (roundNum%10 == 0){
+            plr_names = makeRound(board, game_window, turnNo, plr_names, CURRENT_HANDS, CURRENT_COLLECTS, leading_plr_list);
+            if (turnNo%10 == 0){
                 Deck card_deck; // Re-initialize a deck
                 initHands(CURRENT_HANDS, card_deck);
-                endOf10Turns(CURRENT_COLLECTS, plr_names, game_window, leading_plr_list, roundNum);
+                endOf10Turns(CURRENT_COLLECTS, plr_names, game_window, leading_plr_list, turnNo);
             }
         }
     }     

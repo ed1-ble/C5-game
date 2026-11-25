@@ -114,7 +114,7 @@ Bug 2: UI Bug - Unwanted commas between each cards
 
 25/11 Worklog
 
-- Increased number of rounds to 100 (every 10 turns, hands of players are redrawn), see MAX_TURNS in main.cpp
+- Increased number of turns to 100 (every 10 turns, hands of players are redrawn, 1 round ends), see MAX_TURNS in main.cpp
 
 - Added new global array leading_catface_totals, this keeps track of the catfaces owned by leading players
     at the end of each turn, it will be displayed in the game summary and saved to summary.txt in a tabular format
@@ -129,6 +129,15 @@ Bug 2: UI Bug - Unwanted commas between each cards
         as their catfaces that round, this helps track leading players' performance for logging.
 
 - The player's input prompt was changed to "PLAYER INPUT" for more clarity over "PLR INPUT" (minor fix)
+
+- Variable roundNo -> turnNo, since its purpose is to track each turn not each round
+
+- Prompt change: "Choose a card ID to play" instead of "Choose a card to play" for more clarity
+
+- Every 1 round is 10 turns, previously used the wrong terminology
+
+- Multiple winners can now be shown if their catfaces collected are the same and are the least amount. Previously, this edge case was
+    not possible.
 
 - 1 bug patched where the deck of cards could potentially run out when there are too many players and too many rounds played,
     the deck is now re-initialized periodically to avoid cards running out and leading to out-of-range errors 
