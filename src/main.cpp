@@ -293,7 +293,7 @@ std::string genSummaryTable(std::vector<std::string> leading_plr_list){
     oss << separator << "\n";
 
     for (size_t i=0;i<leading_plr_list.size();i++){
-        oss << std::setw(9) << "|" + std::to_string(i+1)
+        oss << std::setw(9) << "|" + std::to_string(10*(i+1))
             << std::setw(16) << "|" + leading_plr_list[i]
             << std::setw(9) << "|" + std::to_string(leading_catface_totals[i]) << "|\n";
     }
