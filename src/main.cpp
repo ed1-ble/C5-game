@@ -514,6 +514,7 @@ int main(){
            // as the two are modified via PASS BY REFERENCE already
             plr_names = makeRound(board, game_window, roundNum, plr_names, CURRENT_HANDS, CURRENT_COLLECTS, leading_plr_list);
             if (roundNum%10 == 0){
+                Deck card_deck; // Re-initialize a deck
                 initHands(CURRENT_HANDS, card_deck);
                 endOf10Turns(CURRENT_COLLECTS, plr_names, game_window, leading_plr_list, roundNum);
             }

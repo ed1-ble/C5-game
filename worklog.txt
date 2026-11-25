@@ -109,3 +109,26 @@ Bug 1: Integer input bug - Type check was missing
 Bug 2: UI Bug - Unwanted commas between each cards
 
 - Simply check if the card being printed is the last card, if so, discard the comma
+
+======================================================================================
+
+25/11 Worklog
+
+- Increased number of rounds to 100 (every 10 turns, hands of players are redrawn), see MAX_TURNS in main.cpp
+
+- Added new global array leading_catface_totals, this keeps track of the catfaces owned by leading players
+    at the end of each turn, it will be displayed in the game summary and saved to summary.txt in a tabular format
+    to show how leading players performed
+
+- Renewed UI for End screen, Round summary and Game summary.
+    -> End Screen: New ASCII Art to improve end screen aesthetically
+    -> Round summary: still shows leading players and their total count of catfaces that round, but now reformatted
+        into a table for better aesthetics, the entire collected pile that shows is also removed since it is deemed 
+        quite unnecessary so now only the players and their corresponding count of catfaces is shown in the table.
+    -> Game summary: Game summary now shows a table containing each round and their corresponding leading player as well
+        as their catfaces that round, this helps track leading players' performance for logging.
+
+- The player's input prompt was changed to "PLAYER INPUT" for more clarity over "PLR INPUT" (minor fix)
+
+- 1 bug patched where the deck of cards could potentially run out when there are too many players and too many rounds played,
+    the deck is now re-initialized periodically to avoid cards running out and leading to out-of-range errors 
