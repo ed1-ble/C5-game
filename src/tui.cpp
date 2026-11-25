@@ -1,7 +1,7 @@
 #include<iostream>
 #include<string>
 #include<vector>
-#include "include/tui.hpp"
+#include "../include/tui.hpp"
 #pragma once
 
 TUI::TUI(int h, int w) : height(h), width(w) // colon list for optimization (just good habit)

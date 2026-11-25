@@ -1,14 +1,7 @@
-======== PERFORMANCE SUMMARY ========
-Leading Players of each round:
-ROUND 1: James
-ROUND 2: James
-ROUND 3: James
-ROUND 4: James
-ROUND 5: James
-ROUND 6: James
-ROUND 7: James
-ROUND 8: James
-ROUND 9: James
-ROUND 10: James
-============== WINNER ===============
-Winner: James
++--------+---------------+--------+
+|ROUND   |LEAD           |CATFACE |
++--------+---------------+--------+
+|1       |1              |16      |
+|2       |1              |35      |
++--------+---------------+--------+
+WINNER: 1
